@@ -10,18 +10,21 @@ module.exports = class ApiFeatures {
     fieldsToRemove.forEach(el => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|ne|all)\b/g, match => `$${match}`);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|ne|all|regex|and|elemMatch)\b/g, match => `$${match}`);
     queryObj = JSON.parse(queryStr);
+
+    // { $and: [ { price: { $all: [150, 482] } } ] }
+    // { $and: [ { price: { $elemMatch: { $gte: 120 } } }, { price: { $elemMatch: { $lte: 150 } } } ] }
+    // { $and: [ { price: { $elemMatch: { $gte: 123, $lte: 150 } } } ] }
+    // { price: { $elemMatch: { $gte: 123, $lte: 150 } } }
 
     const features = [
       'rules', 
       'others', 
       'bills', 
-      'places', 
       'security', 
       'condition',
       'numberOfRooms',
-      'price',
       'kitchen',
       'bath',
       'furnitured',
@@ -34,23 +37,37 @@ module.exports = class ApiFeatures {
       'discount'
     ];
 
-    features.forEach((el) => {
-      for (let key in queryObj) {
-        if (el === key) {
-          if (typeof queryObj[key] === 'object') {
-            for (let inKey in queryObj[key]) {
-              queryObj[key][inKey] = queryObj[key][inKey].split(',');
-              
-              if (el === 'price' || el === 'discount' || el === 'numberOfRooms') {
-                queryObj[key][inKey] = queryObj[key][inKey].map(el => +el);
-              }
+    for (let key in queryObj) {
+      if (features.includes(key)) {
+        if (typeof queryObj[key] === 'object') {
+          for (let inKey in queryObj[key]) {
+            queryObj[key][inKey] = queryObj[key][inKey].split(',');
+            
+            if (key === 'numberOfRooms') {
+              queryObj[key][inKey] = queryObj[key][inKey].map(el => +el);
             }
-          } else {
-            queryObj[key] = queryObj[key].split(',');
           }
+        } else {
+          queryObj[key] = queryObj[key].split(',');
+        }
+      } else {
+        if (key === 'region') {
+          queryObj[key].$regex = new RegExp(queryObj[key].$regex, 'g');
+        }
+        
+        if (key === 'price') {
+          const { from, to } = queryObj[key];
+          const values = {};
+
+          if (to) values['$lte'] = to;
+          if (from) values['$gte'] = from;
+          
+          queryObj[key] = { $elemMatch: values }
         }
       }
-    });
+    }
+
+    console.log({ query: queryObj })
     
     this.mongooseQuery = this.mongooseQuery.find(queryObj);
 

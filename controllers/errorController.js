@@ -1,13 +1,13 @@
 const AppError = require('../utils/AppError');
 
-const handleJWTTokenExpError = () => new AppError('Token has expired, login again', 401);
-const handleJWTError = () => new AppError('Invalid token, please login again', 401);
-const handleDBCastError = (er) => new AppError(`Failed to assign id for ${er.path}`, 400);
-const handleDBDuplicateError = () => new AppError(`Duplicate key`, 400);
+const handleJWTTokenExpError = () => new AppError('tokenExpired', 401);
+const handleJWTError = () => new AppError('invalidAuth', 401);
+const handleDBCastError = (er) => new AppError(`inputError`, 400);
+const handleDBDuplicateError = () => new AppError(`duplication`, 400);
 
 const handleValidationError = (er) => {
   const fields = Object.values(er.errors).map(el => el.message).join('; ');
-  return new AppError(`Failed at validation for ${fields}`, 400);
+  return new AppError(`validationError`, 400);
 };
 
 const sendErrorForDev = (er, res) => {
@@ -28,7 +28,7 @@ const sendErrorForProd = (er, res) => {
   } else {
     res.status(er.statusCode).json({
       status: 'error',
-      message: 'Oops, something went wrong'
+      message: 'genericError'
     });
   }
 };
