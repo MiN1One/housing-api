@@ -1,4 +1,6 @@
 const { Schema, model } = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 const apartmentSchema = new Schema(
   {
@@ -155,8 +157,37 @@ const apartmentSchema = new Schema(
 apartmentSchema.index({ title: 'text' });
 apartmentSchema.index({ city: 1, region: 1 });
 
+// STATICS
+// apartmentSchema.statics.saveMinMaxStats = async function() {
+//   const stats = await this.aggregate([
+//     {
+//       $match: {}
+//     },
+//     {
+//       $group: {
+//         _id: null,
+//         maxPrice: { $max: '$price' },
+//         minPrice: { $min: '$price' },
+//         maxRooms: { $max: '$numberOfRooms' }
+//       }
+//     }
+//   ]);
+
+//   fs.writeFile(path.join(__dirname, '../data/min-max-sets.json'), JSON.stringify(stats));
+// };
+
+// // DOCUMENT
+// apartmentSchema.post('save', async function() {
+//   await this.constructor.saveMinMaxStats();
+// });
+
+// apartmentSchema.post(/^findOneAnd/, async function() {
+//   await this.constructor.saveMinMaxStats();
+// });
+
+// QUERY
 apartmentSchema.pre(/^find/, function() {
-  this.find({ active: { $ne: false } })
+  this.find({ active: { $ne: false } });
 });
 
 const ApartmentModel = model('Apartment', apartmentSchema);

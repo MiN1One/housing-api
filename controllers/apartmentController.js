@@ -1,5 +1,7 @@
 const factory = require('./handleFactory');
 const Apartment = require('../models/apartmentModel');
+const fs = require('fs');
+const path = require('path');
 
 exports.createOne = factory.createOne(Apartment);
 exports.getOne = factory.getOne(Apartment, 'landlord');

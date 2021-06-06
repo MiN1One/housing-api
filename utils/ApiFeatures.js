@@ -10,13 +10,24 @@ module.exports = class ApiFeatures {
     fieldsToRemove.forEach(el => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|ne|all|regex|and|elemMatch)\b/g, match => `$${match}`);
+
+    queryStr = queryStr.replace(
+      /\b(gt|gte|lt|lte|ne|all|regex|and|elemMatch)\b/g,
+      match => `$${match}`
+    );
+
     queryObj = JSON.parse(queryStr);
 
     // { $and: [ { price: { $all: [150, 482] } } ] }
-    // { $and: [ { price: { $elemMatch: { $gte: 120 } } }, { price: { $elemMatch: { $lte: 150 } } } ] }
+
+    // { $and: [
+    // { price: { $elemMatch: { $gte: 120 } } }, 
+    // { price: { $elemMatch: { $lte: 150 } } } 
+    // ]}
+
     // { $and: [ { price: { $elemMatch: { $gte: 123, $lte: 150 } } } ] }
     // { price: { $elemMatch: { $gte: 123, $lte: 150 } } }
+    // { numberOfRooms: { $elemMatch: { $regex: /\b(1|4|2)\b/ } } }
 
     const features = [
       'rules', 
@@ -24,9 +35,9 @@ module.exports = class ApiFeatures {
       'bills', 
       'security', 
       'condition',
-      'numberOfRooms',
       'kitchen',
       'bath',
+      'numberOfRooms',
       'furnitured',
       'internet',
       'parking',
@@ -42,13 +53,16 @@ module.exports = class ApiFeatures {
         if (typeof queryObj[key] === 'object') {
           for (let inKey in queryObj[key]) {
             queryObj[key][inKey] = queryObj[key][inKey].split(',');
-            
-            if (key === 'numberOfRooms') {
-              queryObj[key][inKey] = queryObj[key][inKey].map(el => +el);
-            }
           }
         } else {
           queryObj[key] = queryObj[key].split(',');
+          
+          if (key === 'numberOfRooms') {
+            const nums = {};
+            queryObj[key].forEach(el => nums['$eq'] = +el);
+            queryObj[key] = { $elemMatch: nums }
+            console.log(queryObj[key]);
+          }
         }
       } else {
         if (key === 'region') {
@@ -67,7 +81,7 @@ module.exports = class ApiFeatures {
       }
     }
 
-    console.log({ query: queryObj })
+    console.log({ query: queryObj });
     
     this.mongooseQuery = this.mongooseQuery.find(queryObj);
 

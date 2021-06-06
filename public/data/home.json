@@ -1,0 +1,16 @@
+[
+  {
+    "main": "Housing for students",
+    "sub": "Understanding conditional and unconditional offers",
+    "image": "image-1.jpg",
+    "action": "discover regions",
+    "to": "/all/all"
+  },
+  {
+    "main": "Hehe",
+    "sub": "Hehe boay",
+    "image": "image-2.jpg",
+    "action": "hehe",
+    "to": "/all/all"
+  }
+]
