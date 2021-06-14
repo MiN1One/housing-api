@@ -2,24 +2,38 @@ const ApiFeatures = require('../utils/ApiFeatures');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const { ObjectId } = require('mongoose').Types;
+const { convertCurrency } = require('../utils/currencify');
 
 exports.getAll = (Model, populateObj) => 
   catchAsync(async (req, res, next) => {
-    const query = new ApiFeatures(Model.find(), req.query)
+    let features = await new ApiFeatures(Model.find(), req.query)
+      .filter();
+
+    features = features
       .sort()
-      .filter()
       .paginate()
       .search()
-      .project()
-      .mongooseQuery;
+      .project();
+
+    let query = features.mongooseQuery;
 
     if (populateObj)
       query = query.populate(populateObj);
 
-    const docs = await query;
+    let docs = await query;
+
+    let numDocuments = null;
+    if (req.query.count) {
+      numDocuments = await Model.countDocuments(features.filterObj);
+    }
+
+    if (req.query.currency) {
+      docs = await convertCurrency(req.query.currency, docs);
+    }
 
     res.status(200).json({
       status: 'success',
+      numberOfDocuments: numDocuments ? numDocuments : undefined,
       results: docs.length,
       data: {
         docs

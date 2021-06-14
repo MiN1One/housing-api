@@ -16,6 +16,8 @@ exports.setUserId = (req, res, next) => {
     req.body.poster = {};
     req.body.poster['id'] = req.user._id;
     req.body.poster['name'] = req.user.name;
+
+    console.log(req.user)
   }
 
   next();

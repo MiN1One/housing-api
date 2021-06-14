@@ -9,9 +9,7 @@ const hpp = require('hpp');
 const path = require('path');
 
 const errorController = require('./controllers/errorController');
-const authController = require('./controllers/authController');
 
-const dormitoryRoute = require('./routes/dormitoryRoute');
 const reviewRoute = require('./routes/reviewRoute');
 const apartmentsRoute = require('./routes/apartmentRoute');
 const userRoute = require('./routes/userRoute');
@@ -38,9 +36,24 @@ app.use(xss());
 app.use(hpp());
 // ---------------------
 
+const Apt = require('./models/apartmentModel');
+app.get('/max', async (req, res, next) => {
+  const maxvals = await Apt.aggregate([
+    {
+      $group: {
+        _id: null,
+        maxPrice: { $max: "$price" }
+      }
+    }
+  ]);
+
+  res.status(200).json({
+    maxvals
+  })
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use('/api/dormitories', dormitoryRoute);
 app.use('/api/reviews', reviewRoute);
 app.use('/api/apartments', apartmentsRoute);
 app.use('/api/users', userRoute);

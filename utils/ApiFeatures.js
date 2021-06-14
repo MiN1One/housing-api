@@ -1,12 +1,18 @@
+const fs = require('fs');
+const { promisify } = require('util');
+const { path } = require('../app');
+const { parseCurrency } = require('./currencify');
+
 module.exports = class ApiFeatures {
   constructor(mongooseQuery, expressQuery) {
     this.mongooseQuery = mongooseQuery;
     this.expressQuery = expressQuery;
+    this.filterObj = {};
   }
 
-  filter() {
+  async filter() {
     let queryObj = { ...this.expressQuery };
-    const fieldsToRemove = ['search', 'page', 'sort', 'project', 'limit', 'count'];
+    const fieldsToRemove = ['search', 'page', 'sort', 'project', 'limit', 'count', 'currency'];
     fieldsToRemove.forEach(el => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
@@ -17,17 +23,6 @@ module.exports = class ApiFeatures {
     );
 
     queryObj = JSON.parse(queryStr);
-
-    // { $and: [ { price: { $all: [150, 482] } } ] }
-
-    // { $and: [
-    // { price: { $elemMatch: { $gte: 120 } } }, 
-    // { price: { $elemMatch: { $lte: 150 } } } 
-    // ]}
-
-    // { $and: [ { price: { $elemMatch: { $gte: 123, $lte: 150 } } } ] }
-    // { price: { $elemMatch: { $gte: 123, $lte: 150 } } }
-    // { numberOfRooms: { $elemMatch: { $regex: /\b(1|4|2)\b/ } } }
 
     const features = [
       'rules', 
@@ -56,13 +51,6 @@ module.exports = class ApiFeatures {
           }
         } else {
           queryObj[key] = queryObj[key].split(',');
-          
-          if (key === 'numberOfRooms') {
-            const nums = {};
-            queryObj[key].forEach(el => nums['$eq'] = +el);
-            queryObj[key] = { $elemMatch: nums }
-            console.log(queryObj[key]);
-          }
         }
       } else {
         if (key === 'region') {
@@ -70,8 +58,19 @@ module.exports = class ApiFeatures {
         }
         
         if (key === 'price') {
-          const { from, to } = queryObj[key];
+          let { from, to } = queryObj[key];
           const values = {};
+
+          if (this.expressQuery.currency) {
+            const { from: parsedPriceFrom, to: parsedPriceTo } = await parseCurrency({
+              currency: this.expressQuery.currency,
+              from: from && from,
+              to: to && to
+            });
+
+            from = parsedPriceFrom;
+            to = parsedPriceTo;
+          }
 
           if (to) values['$lte'] = to;
           if (from) values['$gte'] = from;
@@ -83,6 +82,7 @@ module.exports = class ApiFeatures {
 
     console.log({ query: queryObj });
     
+    this.filterObj = { ...queryObj };
     this.mongooseQuery = this.mongooseQuery.find(queryObj);
 
     return this;
@@ -94,28 +94,31 @@ module.exports = class ApiFeatures {
 
       this.mongooseQuery = this.mongooseQuery.sort(sort);
     } else {
-      this.mongooseQuery = this.mongooseQuery.sort('-created');
+      this.mongooseQuery = this.mongooseQuery.sort('-createdAt');
     }
 
     return this;
   }
 
   paginate() {
-    if (this.expressQuery.page & this.expressQuery.limit) {
+    if (this.expressQuery.page && this.expressQuery.limit) {
       const { page, limit } = this.expressQuery;
       const skip = (page - 1) * limit;
-
-      this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
+      
+      this.mongooseQuery = this.mongooseQuery.skip(parseInt(skip)).limit(parseInt(limit));
     }
+
 
     return this;
   }
 
 
   limit() {
-    if (this.expressQuery.limit) 
+    if (this.expressQuery.limit) {
       this.mongooseQuery = this.mongooseQuery.limit(+this.expressQuery.limit);
-    else this.mongooseQuery = this.mongooseQuery.limit(30);
+    } else {
+      this.mongooseQuery = this.mongooseQuery.limit(30);
+    }
 
     return this;
   }
@@ -144,3 +147,14 @@ module.exports = class ApiFeatures {
     return this;
   }
 }
+
+// { $and: [ { price: { $all: [150, 482] } } ] }
+
+// { $and: [
+// { price: { $elemMatch: { $gte: 120 } } }, 
+// { price: { $elemMatch: { $lte: 150 } } } 
+// ]}
+
+// { $and: [ { price: { $elemMatch: { $gte: 123, $lte: 150 } } } ] }
+// { price: { $elemMatch: { $gte: 123, $lte: 150 } } }
+// { numberOfRooms: { $elemMatch: { $regex: /\b(1|4|2)\b/ } } }

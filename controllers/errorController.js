@@ -7,7 +7,7 @@ const handleDBDuplicateError = () => new AppError(`duplication`, 400);
 
 const handleValidationError = (er) => {
   const fields = Object.values(er.errors).map(el => el.message).join('; ');
-  return new AppError(`validationError`, 400);
+  return new AppError(`validationError ${fields}`, 400);
 };
 
 const sendErrorForDev = (er, res) => {

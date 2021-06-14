@@ -23,6 +23,7 @@ router
   .patch(
     authController.protect, 
     authController.restrictTo(['user']),
+    controller.setUserId,
     controller.updateReview
   )
   .delete(
