@@ -1,0 +1,10 @@
+{
+  "utils": {
+    "sort": {
+      "+createdAt": "Date (ascending)",
+      "-createdAt": "Date (descending)",
+      "+price": "Price (ascending)",
+      "-price": "Price (descending)"
+    }
+  }
+}

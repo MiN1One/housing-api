@@ -58,6 +58,10 @@ app.use('/api/reviews', reviewRoute);
 app.use('/api/apartments', apartmentsRoute);
 app.use('/api/users', userRoute);
 
+app.get('*', (req, res) => 
+  res.sendFile(path.join(__dirname, './public/index.html'))
+);
+
 app.use(errorController);
 
 module.exports = app;

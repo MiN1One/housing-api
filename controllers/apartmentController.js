@@ -1,7 +1,40 @@
 const factory = require('./handleFactory');
 const Apartment = require('../models/apartmentModel');
-const fs = require('fs');
-const path = require('path');
+const multer = require('multer');
+const sharp = require('sharp');
+const AppError = require('../utils/AppError');
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image')) {
+    return cb(
+      new AppError('Only images are allowed to be uploaded', 400), 
+      false
+    );
+  }
+
+  cb(null, true);
+};
+
+const upload = multer({
+  fileFilter: multerFilter,
+  storage: multerStorage
+});
+
+exports.resizeImages = (req, res, next) => {
+  console.log(req.files);
+
+  if (!req.files.imageCover || !req.files.images)
+    return next();
+
+  next();
+};
+
+exports.uploadImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'image', maxCount: 7 }
+]);
 
 exports.createOne = factory.createOne(Apartment);
 exports.getOne = factory.getOne(Apartment, 'landlord');

@@ -1,0 +1,2 @@
+(this["webpackJsonpdormitory-view"]=this["webpackJsonpdormitory-view"]||[]).push([[15],{179:function(e,t,r){},195:function(e,t,r){"use strict";r.r(t);var n=r(2),i=r.n(n),c=r(8),o=r(3),s=(r(179),r(1)),u=function(){var e=Object(c.c)((function(e){return e.user})).user,t=Object(o.f)();return e||t.replace("/auth/login"),Object(s.jsx)("main",{className:"profile"})};t.default=i.a.memo(u)}}]);
+//# sourceMappingURL=15.b728dfe7.chunk.js.map

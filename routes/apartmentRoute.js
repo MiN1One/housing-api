@@ -13,6 +13,8 @@ router
     authController.protect, 
     authController.restrictTo(['admin', 'landlord']), 
     controller.setLandlordId,
+    // controller.uploadImages,
+    // controller.resizeImages,
     controller.createOne
   );
 

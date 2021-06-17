@@ -1,7 +1,4 @@
 const { Schema, model } = require('mongoose');
-const fs = require('fs');
-const path = require('path');
-const { promisify } = require('util');
 
 const apartmentSchema = new Schema(
   {
@@ -12,6 +9,10 @@ const apartmentSchema = new Schema(
     active: {
       type: Boolean,
       default: true
+    },
+    rooms: {
+      type: [String],
+      default: undefined
     },
     ownership: {
       type: String,
@@ -108,7 +109,6 @@ const apartmentSchema = new Schema(
       type: String,
       required: [true, 'Cover image must be specified']
     },
-    discount: [Number],
     // description: {
     //   type: String,
     //   min: 30,
@@ -126,7 +126,6 @@ const apartmentSchema = new Schema(
       type: Number,
       default: 0
     },
-    others:  [String],
     security: {
       type: [String],
       required: [true, 'Secuity measures must be specified'],
@@ -147,7 +146,10 @@ const apartmentSchema = new Schema(
       required: [true, 'Nearby places must be specified'],
       default: undefined
     },
-    offers: String
+    offers: {
+      type: [Array], 
+      default: undefined
+    }
   },
   {
     toObject: { virtuals: true },
