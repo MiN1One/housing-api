@@ -1,13 +1,11 @@
 const ApiFeatures = require('../utils/ApiFeatures');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
-const { ObjectId } = require('mongoose').Types;
 const { convertCurrency } = require('../utils/currencify');
 
 exports.getAll = (Model, populateObj) => 
   catchAsync(async (req, res, next) => {
-    let features = await new ApiFeatures(Model.find(), req.query)
-      .filter();
+    let features = await new ApiFeatures(Model.find(), req.query).filter();
 
     features = features
       .sort()
@@ -43,14 +41,7 @@ exports.getAll = (Model, populateObj) =>
 
 exports.getOne = (Model, ...populateObj) => 
   catchAsync(async (req, res, next) => {
-    let query = null;
-    if (req.query.next) {
-      query = Model.findOne({ _id: { $gt: ObjectId(req.params.id) } });
-    } else if (req.query.prev) {
-      query = Model.findOne({ _id: { $lt: ObjectId(req.params.id) } });
-    } else {
-      query = Model.findById(req.params.id);
-    }
+    let query = Model.findById(req.params.id);
 
     if (populateObj) {
       populateObj.forEach((obj) => {
@@ -58,15 +49,11 @@ exports.getOne = (Model, ...populateObj) =>
       });
     }
 
-    const doc = await query;
-    
-    if (doc && req.query.count) {
-      doc.numberOfViews = +doc.numberOfViews + 1;
-      await doc.save();
-    }
+    let doc = await query;
 
-    if (!doc)
+    if (!doc) {
       return next(new AppError('No document found with this ID', 404));
+    }
 
     res.status(200).json({
       status: 'success',

@@ -20,7 +20,7 @@ router
 
 router
   .route('/:id')
-  .get(controller.getOne)
+  .get(controller.getApartment)
   .patch(
     authController.protect,
     authController.restrictTo(['admin', 'landlord']),

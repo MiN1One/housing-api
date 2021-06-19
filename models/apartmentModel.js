@@ -162,7 +162,10 @@ apartmentSchema.index({ city: 1, region: 1 });
 
 // QUERY
 apartmentSchema.pre(/^find/, function() {
-  this.find({ active: { $ne: false } });
+  this.find({ 
+    active: { $ne: false },
+    // pending: { $ne: true }
+  });
 });
 
 const ApartmentModel = model('Apartment', apartmentSchema);

@@ -1,7 +1,5 @@
-const fs = require('fs');
-const { promisify } = require('util');
-const { path } = require('../app');
 const { parseCurrency } = require('./currencify');
+const { ObjectId } = require('mongoose').Types;
 
 module.exports = class ApiFeatures {
   constructor(mongooseQuery, expressQuery) {
@@ -12,7 +10,17 @@ module.exports = class ApiFeatures {
 
   async filter() {
     let queryObj = { ...this.expressQuery };
-    const fieldsToRemove = ['search', 'page', 'sort', 'project', 'limit', 'count', 'currency'];
+    const fieldsToRemove = [
+      'search', 
+      'page', 
+      'sort', 
+      'project', 
+      'limit', 
+      'count', 
+      'currency',
+      'next',
+      'prev'
+    ];
     fieldsToRemove.forEach(el => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
@@ -24,7 +32,7 @@ module.exports = class ApiFeatures {
 
     queryObj = JSON.parse(queryStr);
 
-    const features = [
+    const fields = [
       'rules', 
       'others', 
       'bills', 
@@ -44,7 +52,7 @@ module.exports = class ApiFeatures {
     ];
 
     for (let key in queryObj) {
-      if (features.includes(key)) {
+      if (fields.includes(key)) {
         if (typeof queryObj[key] === 'object') {
           for (let inKey in queryObj[key]) {
             queryObj[key][inKey] = queryObj[key][inKey].split(',');
@@ -62,7 +70,10 @@ module.exports = class ApiFeatures {
           const values = {};
 
           if (this.expressQuery.currency) {
-            const { from: parsedPriceFrom, to: parsedPriceTo } = await parseCurrency({
+            const {
+              from: parsedPriceFrom,
+              to: parsedPriceTo
+            } = await parseCurrency({
               currency: this.expressQuery.currency,
               from: from && from,
               to: to && to
@@ -112,6 +123,25 @@ module.exports = class ApiFeatures {
     return this;
   }
 
+  sequenceOne(id) {
+    let filter = {
+      // region: this.filterObj.region,
+      city: this.filterObj.city,
+    };
+
+    if (this.expressQuery.next || this.expressQuery.prev) {
+      filter._id = { $gt: ObjectId(id) };
+      if (this.expressQuery.prev) {
+        filter._id = { $lt: ObjectId(id) };
+      }
+
+      this.mongooseQuery = this.mongooseQuery.findOne(filter);
+    } else {
+      this.mongooseQuery = this.mongooseQuery.findOne({ _id: id });
+    }
+
+    return this;
+  }
 
   limit() {
     if (this.expressQuery.limit) {
@@ -128,7 +158,7 @@ module.exports = class ApiFeatures {
       this.mongooseQuery = this.mongooseQuery.find({
         $text: {
           $search: this.expressQuery.search,
-          $caseSensetive: false,
+          $caseSensitive: false,
           $diacriticSensitive: false
         }
       });
