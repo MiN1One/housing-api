@@ -13,7 +13,8 @@ router.use('/:landlordId/apartments', apartmentRoute);
 // ------
 
 router.post('/signup', authController.signup);
-router.get('/checkStatus', authController.isLoggedIn);
+router.get('/status', authController.isLoggedIn);
+router.get('/logout', authController.logout);
 
 const limit = rateLimit({
   windowMs: 60 * 60 * 1000,

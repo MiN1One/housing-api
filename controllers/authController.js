@@ -12,17 +12,23 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (res, user, code) => {
+const createSendToken = (res, user, remember) => {
   const token = signToken(user._id);
 
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'development' ? false : true
-  });
+  if (remember) {
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'development' ? false : true,
+      sameSite: true,
+      expires: new Date(
+        Date.now() + 24 * 60 * 60 * 1000
+      )
+    });
+  }
 
   user.password = undefined;
 
-  res.status(code).json({
+  res.status(200).json({
     status: 'success',
     token,
     user
@@ -48,7 +54,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  const { password, email } = req.body;
+  const { password, email, remember } = req.body;
   
   if (!password || !email)
     return next(new AppError('Please enter your email and password', 400));
@@ -58,34 +64,37 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError('Username or password is incorrect', 400));
 
-  createSendToken(res, user, 200);
+  createSendToken(res, user, remember);
 });
 
-const sendStatus = (res) => 
-  res.status(200).json({ authorized: false });
+const sendStatus = (res, user) => {
+  res.json({ user: user || undefined });
+};
 
 exports.isLoggedIn = catchAsync(async (req, res, next) => {
-  if (!req.cookies.jwt) {
-    sendStatus();
-    return next();
+  if (!req.cookies.token) {
+    return sendStatus(res);
   }
 
-  const decodedToken = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_KEY);
+  const decodedToken = await promisify(jwt.verify)(req.cookies.token, process.env.JWT_KEY);
 
   const user = await User.findById(decodedToken.id);
+  console.log(user);
   if (!user) {
-    sendStatus();
-    return next();
+    return sendStatus(res);
   }
   
   if (user.passwordWasChanged(decodedToken.iat)) {
-    sendStatus();
-    return next();
+    return sendStatus(res);
   }
 
-  res.status(200).json({ authorized: true });
-  next();
+  sendStatus(res, user);
 });
+
+exports.logout = (req, res) => {
+  res.clearCookie('token');
+  res.end();
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
   let token = null;
