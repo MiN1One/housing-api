@@ -1,5 +1,6 @@
 const { Schema, model } = require('mongoose');
 
+// bath, kitchen: true for private; false for publilc
 const apartmentSchema = new Schema(
   {
     title: {
@@ -51,7 +52,7 @@ const apartmentSchema = new Schema(
       required: [true, 'There must someone who owns the dormitory']
     },
     kitchen: {
-      type: [String],
+      type: [Boolean],
       required: [true, 'Kitchen type is required'],
       default: undefined
     },
@@ -61,7 +62,7 @@ const apartmentSchema = new Schema(
       default: undefined
     },
     bath: {
-      type: [String],
+      type: [Boolean],
       required: [true, 'Bath type is required'],
       default: undefined
     },

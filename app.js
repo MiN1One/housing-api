@@ -36,22 +36,6 @@ app.use(xss());
 app.use(hpp());
 // ---------------------
 
-const Apt = require('./models/apartmentModel');
-app.get('/max', async (req, res, next) => {
-  const maxvals = await Apt.aggregate([
-    {
-      $group: {
-        _id: null,
-        maxPrice: { $max: "$price" }
-      }
-    }
-  ]);
-
-  res.status(200).json({
-    maxvals
-  })
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/reviews', reviewRoute);
