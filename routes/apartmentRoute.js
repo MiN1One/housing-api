@@ -11,10 +11,9 @@ router
   .get(controller.setForLandlord, controller.getAll)
   .post(
     authController.protect, 
-    authController.restrictTo(['admin', 'landlord']), 
+    // authController.restrictTo(['admin', 'landlord']), 
     controller.setLandlordId,
-    // controller.uploadImages,
-    // controller.resizeImages,
+    controller.restructureDocumentForDB,
     controller.createOne
   );
 
@@ -23,7 +22,9 @@ router
   .get(controller.getApartment)
   .patch(
     authController.protect,
-    authController.restrictTo(['admin', 'landlord']),
+    // authController.restrictTo(['admin', 'landlord']),
+    controller.receiveImages,
+    controller.resizeImages,
     controller.updateOne
   )
   .delete(

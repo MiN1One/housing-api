@@ -2,9 +2,13 @@ const factory = require('./handleFactory');
 const Apartment = require('../models/apartmentModel');
 const multer = require('multer');
 const sharp = require('sharp');
+const restructureFields = require('../models/restructureFields');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const ApiFeatures = require('../utils/ApiFeatures');
+const path = require('path');
+const { nanoid } = require('nanoid');
+const createDir = require('../utils/createDir');
 
 const multerStorage = multer.memoryStorage();
 
@@ -24,19 +28,51 @@ const upload = multer({
   storage: multerStorage
 });
 
-exports.resizeImages = (req, res, next) => {
-  console.log(req.files);
-
-  if (!req.files.imageCover || !req.files.images)
-    return next();
-
-  next();
+const processImage = async (image, name, quality, id) => {
+  await sharp(image)
+    .resize(775, 450)
+    .toFormat('jpeg')
+    .jpeg({ quality })
+    .toFile(path.join(__dirname, `../public/images/apartments/${id}/${name}`));
 };
 
-exports.uploadImages = upload.fields([
-  { name: 'imageCover', maxCount: 1 },
-  { name: 'image', maxCount: 7 }
-]);
+exports.receiveImages = upload.array('images', 12);
+
+exports.resizeImages = async (req, res, next) => {
+  console.log(req.files);
+  
+  if (!req.files || req.files.length === 0) return next();
+  
+  createDir(`../public/images/apartments/${req.params.id}`);
+  req.body = {
+    images: [],
+    imageCover: `cover-${req.params.id}.jpeg`
+  };
+
+  const pending = req.files.map(async (el) => {
+    let fileName = `${el.originalname}-${nanoid()}-${req.params.id}.jpeg`;
+
+    req.body.images.push(fileName);
+
+    return await processImage(el.buffer, fileName, 80, req.params.id);
+  });
+
+  try {
+    await processImage(
+      req.files[0].buffer, 
+      req.body.imageCover, 
+      65,
+      req.params.id
+    );
+
+    await Promise.all(pending);
+    
+    next();
+  } catch(er) {
+    console.error(er);
+    next(new AppError('Failed to process images!', 500));
+  }
+};
 
 exports.createOne = factory.createOne(Apartment);
 exports.getOne = factory.getOne(Apartment, ['landlord'], true);
@@ -44,35 +80,39 @@ exports.getAll = factory.getAll(Apartment);
 exports.deleteOne = factory.deleteOne(Apartment);
 exports.updateOne = factory.updateOne(Apartment);
 
-const restructureDocument = (data) => {
+exports.restructureDocumentForDB = (req, res, next) => {
+  const data = req.body;
+  const newData = { ...req.body };
+  delete newData.roomOptions;
+  
+  restructureFields.forEach(el => {
+    newData[el] = [];
+  });
+
+  for (let i = 0; i < data.roomOptions.length; i++) {
+    for (let key in data.roomOptions[i]) {
+      if (restructureFields.includes(key)) {
+        newData[key].push(data.roomOptions[i][key]);
+      } 
+    }
+  }
+
+  req.body = newData;
+  next();
+};
+
+const restructureDocumentForClient = (data) => {
   const propertyData = {
     ...data,
     roomOptions: []
   };
-
-  const fields = [
-    'price',
-    'kitchen',
-    'condition',
-    'numberOfRooms',
-    'bath',
-    'furnitured',
-    'internet',
-    'parking',
-    'discount',
-    'gaming',
-    'computer',
-    'air_conditioner',
-    'washing_machine',
-    'offers'
-  ];
 
   for (let i = 0; i < data.price.length; i++) {
     propertyData.roomOptions.push({});
   }
 
   for (const [key, val] of Object.entries(data)) {
-    if (fields.includes(key)) {
+    if (restructureFields.includes(key)) {
       for (let i = 0; i < val.length; i++) {
         propertyData.roomOptions[i][key] = val[i];
       }
@@ -96,8 +136,6 @@ exports.getApartment = catchAsync(async (req, res) => {
     await doc.save();
   }
 
-  console.log({ document: doc });
-
   if (!doc) {
 
     if (req.query.prev) {
@@ -110,15 +148,12 @@ exports.getApartment = catchAsync(async (req, res) => {
 
     doc = await doc.populate('landlord');
 
-    if (req.query.prev)
-      doc = doc['0'];
+    if (req.query.prev) doc = doc['0'];
   }
 
   res.status(200).json({
     status: 'success',
-    data: {
-      doc: restructureDocument(doc._doc)
-    }
+    data: { doc: restructureDocumentForClient(doc._doc) }
   });
 });
 

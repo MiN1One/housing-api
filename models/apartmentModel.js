@@ -101,15 +101,8 @@ const apartmentSchema = new Schema(
       required: [true, 'Washing machine facility must be specified'],
       default: undefined
     },
-    images: {
-      type: [String],
-      required: [true, 'There must be at least one cover image for apartment'],
-      default: undefined
-    },
-    imageCover: {
-      type: String,
-      required: [true, 'Cover image must be specified']
-    },
+    images: [String],
+    imageCover: String,
     // description: {
     //   type: String,
     //   min: 30,

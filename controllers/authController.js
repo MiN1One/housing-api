@@ -67,8 +67,11 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(res, user, remember);
 });
 
-const sendStatus = (res, user) => {
-  res.json({ user: user || undefined });
+const sendStatus = (res, userData) => {
+  res.json({
+    user: userData.user || undefined,
+    token: userData.token || undefined
+  });
 };
 
 exports.isLoggedIn = catchAsync(async (req, res, next) => {
@@ -79,7 +82,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
   const decodedToken = await promisify(jwt.verify)(req.cookies.token, process.env.JWT_KEY);
 
   const user = await User.findById(decodedToken.id);
-  console.log(user);
+
   if (!user) {
     return sendStatus(res);
   }
@@ -88,7 +91,13 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
     return sendStatus(res);
   }
 
-  sendStatus(res, user);
+  sendStatus(
+    res, 
+    {
+      token: decodedToken.id,
+      user
+    }
+  );
 });
 
 exports.logout = (req, res) => {
@@ -97,14 +106,23 @@ exports.logout = (req, res) => {
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
-  let token = null;
-  const { authorization } = req.headers;
+  if (
+    !req.cookies.token && 
+    !req.headers.authorization && 
+    !req.headers.authorization.startsWith('Bearer')
+  ) {
+    return next(new AppError('You are not logged in, please login!', 401));
+  }
 
-  if (authorization && authorization.startsWith('Bearer')) 
-    token = authorization.split(' ')[1];
-  else return next(new AppError('You are not logged in, please login!', 401));
+  let token = null;
+
+  console.log({ cookies: req.cookies });
+  console.log({ authHeader: req.headers.authorization });
+
+  token = req.cookies.token || req.headers.authorization.split(' ')[1];
 
   const decodedToken = await promisify(jwt.verify)(token, process.env.JWT_KEY);
+  
   const user = await User.findById(decodedToken.id);
   if (!user) return next(new AppError('User with this id does not exist', 400));
   
