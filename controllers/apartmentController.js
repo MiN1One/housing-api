@@ -10,6 +10,10 @@ const path = require('path');
 const { nanoid } = require('nanoid');
 const createDir = require('../utils/createDir');
 
+const 
+  IMAGE_WIDTH = 800,
+  IMAGE_HEIGHT = 640;
+
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -30,7 +34,7 @@ const upload = multer({
 
 const processImage = async (image, name, quality, id) => {
   await sharp(image)
-    .resize(775, 450)
+    .resize(IMAGE_WIDTH, IMAGE_HEIGHT)
     .toFormat('jpeg')
     .jpeg({ quality })
     .toFile(path.join(__dirname, `../public/images/apartments/${id}/${name}`));
