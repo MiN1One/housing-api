@@ -38,25 +38,26 @@ const parseCurrency = async (data) => {
 };
 
 const convertCurrency = async (currency, data) => {
-  let newData = [...data];
-
   if (currency === 'usd') {
-    return newData;
+    return data;
   }
 
   const { usd, eu } = await readCurrencies();
+  let newData = data.map(el => {
 
-  newData = newData.map(el => {
-    el.price = el.price.map(p => p * usd);
+    el.price = el.price.map(p => {
+      // for conversion to uzsom
+      p = p * usd;
+
+      if (currency === 'eu') {
+        p = p / eu;
+      }
+
+      return (Math.round(p * 10) / 10).toFixed(2); 
+    });
+
     return el;
   });
-
-  if (currency === 'eu') {
-    newData = newData.map(el => {
-      el.price = el.price.map(p => p / eu);
-      return el;
-    });
-  }
 
   return newData;
 };

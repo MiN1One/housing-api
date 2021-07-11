@@ -136,7 +136,7 @@ const apartmentSchema = new Schema(
       default: undefined
     },
     places: {
-      type: [String],
+      type: Object,
       required: [true, 'Nearby places must be specified'],
       default: undefined
     },
