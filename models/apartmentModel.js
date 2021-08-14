@@ -11,6 +11,7 @@ const apartmentSchema = new Schema(
       type: Boolean,
       default: true
     },
+    organization: String,
     rooms: {
       type: [String],
       default: undefined
@@ -138,10 +139,6 @@ const apartmentSchema = new Schema(
     places: {
       type: Object,
       required: [true, 'Nearby places must be specified'],
-      default: undefined
-    },
-    offers: {
-      type: [Array], 
       default: undefined
     }
   },

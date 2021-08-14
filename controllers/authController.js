@@ -69,8 +69,8 @@ exports.login = catchAsync(async (req, res, next) => {
 
 const sendStatus = (res, userData) => {
   res.json({
-    user: userData.user || undefined,
-    token: userData.token || undefined
+    user: userData?.user || undefined,
+    token: userData?.token || undefined
   });
 };
 

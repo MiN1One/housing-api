@@ -11,6 +11,5 @@ module.exports = [
   'gaming',
   'computer',
   'air_conditioner',
-  'washing_machine',
-  'offers'
+  'washing_machine'
 ]
