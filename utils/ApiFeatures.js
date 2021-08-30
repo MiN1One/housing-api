@@ -124,15 +124,12 @@ module.exports = class ApiFeatures {
   }
 
   sequenceOne(id) {
-    let filter = {
-      // region: this.filterObj.region,
-      city: this.filterObj.city,
-    };
+    let filter = { city: this.filterObj.city };
 
     if (this.expressQuery.next || this.expressQuery.prev) {
-      filter._id = { $gt: ObjectId(id) };
+      filter['_id'] = { $gt: ObjectId(id) };
       if (this.expressQuery.prev) {
-        filter._id = { $lt: ObjectId(id) };
+        filter['_id'] = { $lt: ObjectId(id) };
       }
 
       this.mongooseQuery = this.mongooseQuery.findOne(filter);

@@ -10,13 +10,19 @@ const path = require('path');
 const { nanoid } = require('nanoid');
 const createDir = require('../utils/createDir');
 
+exports.createOne = factory.createOne(Apartment);
+exports.getOne = factory.getOne(Apartment, ['landlord'], true);
+exports.getAll = factory.getAll(Apartment);
+exports.deleteOne = factory.deleteOne(Apartment);
+exports.updateOne = factory.updateOne(Apartment);
+
 const 
-  IMAGE_WIDTH = 800,
-  IMAGE_HEIGHT = 640;
+  IMAGE_WIDTH = 1366,
+  IMAGE_HEIGHT = 768;
 
 const multerStorage = multer.memoryStorage();
 
-const multerFilter = (req, file, cb) => {
+const multerFilter = (_, file, cb) => {
   if (!file.mimetype.startsWith('image')) {
     return cb(
       new AppError('Only images are allowed to be uploaded', 400), 
@@ -43,8 +49,6 @@ const processImage = async (image, name, quality, id) => {
 exports.receiveImages = upload.array('images', 12);
 
 exports.resizeImages = async (req, res, next) => {
-  console.log(req.files);
-  
   if (!req.files || req.files.length === 0) return next();
   
   createDir(`../public/images/apartments/${req.params.id}`);
@@ -77,12 +81,6 @@ exports.resizeImages = async (req, res, next) => {
     next(new AppError('Failed to process images!', 500));
   }
 };
-
-exports.createOne = factory.createOne(Apartment);
-exports.getOne = factory.getOne(Apartment, ['landlord'], true);
-exports.getAll = factory.getAll(Apartment);
-exports.deleteOne = factory.deleteOne(Apartment);
-exports.updateOne = factory.updateOne(Apartment);
 
 exports.restructureDocumentForDB = (req, res, next) => {
   const data = req.body;
@@ -136,7 +134,7 @@ exports.getApartment = catchAsync(async (req, res) => {
   let doc = await query;
   
   if (doc) {
-    doc.numberOfViews = +doc.numberOfViews + 1;
+    doc.numberOfViews++;
     await doc.save();
   }
 
@@ -155,6 +153,7 @@ exports.getApartment = catchAsync(async (req, res) => {
     if (req.query.prev) doc = doc['0'];
   }
 
+  console.log(restructureDocumentForClient(doc._doc))
   res.status(200).json({
     status: 'success',
     data: { doc: restructureDocumentForClient(doc._doc) }
