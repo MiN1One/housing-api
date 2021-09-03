@@ -119,7 +119,6 @@ module.exports = class ApiFeatures {
       this.mongooseQuery = this.mongooseQuery.skip(parseInt(skip)).limit(parseInt(limit));
     }
 
-
     return this;
   }
 
