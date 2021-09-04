@@ -17,8 +17,8 @@ exports.deleteOne = factory.deleteOne(Apartment);
 exports.updateOne = factory.updateOne(Apartment);
 
 const 
-  IMAGE_WIDTH = 1366,
-  IMAGE_HEIGHT = 768;
+  IMAGE_WIDTH = 1334,
+  IMAGE_HEIGHT = 750;
 
 const multerStorage = multer.memoryStorage();
 
