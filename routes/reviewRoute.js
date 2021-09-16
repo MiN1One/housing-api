@@ -7,13 +7,14 @@ const router = express.Router({ mergeParams: true });
 router
   .route('/')
   .get(
-    controller.getForUser,
+    controller.getReviewForApartment,
+    controller.getReviewForUser,
     controller.getAllReviews
   )
   .post(
     authController.protect,
     authController.restrictTo(['user', 'admin']), 
-    controller.setUserId,
+    controller.setPosterId,
     controller.postReview
   );
 
@@ -23,7 +24,7 @@ router
   .patch(
     authController.protect, 
     authController.restrictTo(['user']),
-    controller.setUserId,
+    controller.setPosterId,
     controller.updateReview
   )
   .delete(

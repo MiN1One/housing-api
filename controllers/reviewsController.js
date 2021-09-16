@@ -1,14 +1,23 @@
 const factory = require('./handleFactory');
 const Review = require('../models/reviewModel');
 
-exports.getForUser = (req, res, next) => {
-  if (req.params.userId) 
-    req.query.landlord = req.params.userId;
-    
+exports.getReviewForApartment = (req, _, next) => {
+  if (req.params.apartmentId) {
+    req.query.apartment = req.params.apartmentId;
+  }
+  
   next();
 };
 
-exports.setUserId = (req, res, next) => {
+exports.getReviewForUser = (req, _, next) => {
+  if (req.params.userId) {
+    req.query.landlord = req.params.userId;
+  }
+
+  next();
+};
+
+exports.setPosterId = (req, _, next) => {
   if (req.params.userId) 
     req.body.landlord = req.params.userId;
 
@@ -16,8 +25,6 @@ exports.setUserId = (req, res, next) => {
     req.body.poster = {};
     req.body.poster['id'] = req.user._id;
     req.body.poster['name'] = req.user.name;
-
-    console.log(req.user)
   }
 
   next();

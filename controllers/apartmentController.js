@@ -11,7 +11,7 @@ const { nanoid } = require('nanoid');
 const createDir = require('../utils/createDir');
 
 exports.createOne = factory.createOne(Apartment);
-exports.getOne = factory.getOne(Apartment, ['landlord'], true);
+exports.getOne = factory.getOne(Apartment, 'landlord', 'reviews');
 exports.getAll = factory.getAll(Apartment);
 exports.deleteOne = factory.deleteOne(Apartment);
 exports.updateOne = factory.updateOne(Apartment);
@@ -104,6 +104,13 @@ exports.restructureDocumentForDB = (req, res, next) => {
 };
 
 const restructureDocumentForClient = (data) => {
+  /*
+  * If new field is added to apartment body it has to be added into
+  * restructure fields array
+  */
+
+  console.log(data);
+
   const propertyData = {
     ...data,
     roomOptions: []
@@ -114,7 +121,7 @@ const restructureDocumentForClient = (data) => {
   }
 
   for (const [key, val] of Object.entries(data)) {
-    if (restructureFields.includes(key)) {
+    if (restructureFields.indexOf(key) > -1) {
       for (let i = 0; i < val.length; i++) {
         propertyData.roomOptions[i][key] = val[i];
       }
@@ -126,37 +133,43 @@ const restructureDocumentForClient = (data) => {
 };
 
 exports.getApartment = catchAsync(async (req, res) => {
-  let query = await new ApiFeatures(Apartment.find(), req.query).filter();
+  const query = await new ApiFeatures(Apartment.find(), req.query).filter();
+  const { filterObj } = query;
 
-  const filter = { ...query.filterObj };
-  query = query.sequenceOne(req.params.id).mongooseQuery.populate('landlord');
-
-  let doc = await query;
+  const doc = await query
+    .sequenceOne(req.params.id)
+    .mongooseQuery
+    .populate('landlord')
+    .populate('reviews')
   
-  if (doc) {
+    console.log({...doc}.$$populatedVirtuals)
+
+  if (doc && req.query.count) {
     doc.numberOfViews++;
     await doc.save();
   }
 
   if (!doc) {
-
     if (req.query.prev) {
-      doc = Apartment.find(filter).limit(1).sort({ $natural: -1 });
+      doc = Apartment.find(filterObj).limit(1).sort({ $natural: -1 });
     } else if (req.query.next) {
-      doc = Apartment.findOne(filter);
+      doc = Apartment.findOne(filterObj);
     } else {
       return next(new AppError('No apartment found with this ID', 404));
     }
 
     doc = await doc.populate('landlord');
-
     if (req.query.prev) doc = doc['0'];
   }
-
-  console.log(restructureDocumentForClient(doc._doc))
+  
   res.status(200).json({
     status: 'success',
-    data: { doc: restructureDocumentForClient(doc._doc) }
+    data: {
+      doc: restructureDocumentForClient({
+        ...doc._doc,
+        reviews: doc.$$populatedVirtuals.reviews
+      })
+    }
   });
 });
 

@@ -17,8 +17,12 @@ const reviewSchema = new mongoose.Schema(
       type: Object,
       required: [true, 'Poster must be known']
     },
+    apartment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Apartment'
+    },
     landlord: {
-      type: mongoose.SchemaTypes.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
     review: {

@@ -12,4 +12,4 @@ module.exports = [
   'computer',
   'air_conditioner',
   'washing_machine'
-]
+];

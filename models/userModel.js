@@ -79,7 +79,8 @@ userSchema.virtual('adverts', {
 userSchema.virtual('reviews', {
   ref: 'Review',
   localField: '_id',
-  foreignField: 'landlord'
+  foreignField: 'landlord',
+  justOne: false
 });
 
 // QUERY

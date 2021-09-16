@@ -1,8 +1,13 @@
 const express = require('express');
 const controller = require('../controllers/apartmentController');
 const authController = require('../controllers/authController');
+const reviewsRoute = require('./reviewRoute');
 
 const router = express.Router({ mergeParams: true });
+
+// ---- NESTED ROUTES -----
+router.use('/:apartmentId/reviews', reviewsRoute);
+// ------
 
 router.get('/popular', controller.getPopular, controller.getAll);
 

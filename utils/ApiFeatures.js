@@ -90,19 +90,15 @@ module.exports = class ApiFeatures {
         }
       }
     }
-
-    console.log({ query: queryObj });
     
     this.filterObj = { ...queryObj };
     this.mongooseQuery = this.mongooseQuery.find(queryObj);
-
     return this;
   }
 
   sort() {
     if (this.expressQuery.sort) {
       const sort = this.expressQuery.sort.split(',').join(' ');
-
       this.mongooseQuery = this.mongooseQuery.sort(sort);
     } else {
       this.mongooseQuery = this.mongooseQuery.sort('-createdAt');
@@ -115,7 +111,6 @@ module.exports = class ApiFeatures {
     if (this.expressQuery.page && this.expressQuery.limit) {
       const { page, limit } = this.expressQuery;
       const skip = (page - 1) * limit;
-      
       this.mongooseQuery = this.mongooseQuery.skip(parseInt(skip)).limit(parseInt(limit));
     }
 
@@ -166,7 +161,6 @@ module.exports = class ApiFeatures {
   project() {
     if (this.expressQuery.project) {
       const projection = this.expressQuery.project.split(',').join(' ');
-
       this.mongooseQuery = this.mongooseQuery.select(projection);
     }
 

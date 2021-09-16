@@ -151,6 +151,14 @@ const apartmentSchema = new Schema(
 apartmentSchema.index({ title: 'text' });
 apartmentSchema.index({ city: 1, region: 1 });
 
+// VIRTUALS
+apartmentSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'apartment',
+  justOne: false
+});
+
 // QUERY
 apartmentSchema.pre(/^find/, function() {
   this.find({ 
