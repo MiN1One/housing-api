@@ -18,7 +18,7 @@ const createSendToken = (res, user, remember) => {
   if (remember) {
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'development' ? false : true,
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: true,
       expires: new Date(
         Date.now() + 24 * 60 * 60 * 1000
@@ -134,7 +134,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 exports.restrictTo = (roles) => 
-  (req, res, next) => {
+  (req, _, next) => {
     if (!roles.includes(req.user.role)) 
       return next(new AppError('You do not have permission to perform this action', 403));
     
@@ -167,7 +167,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       message: 'Password reset URL is sent to your email',
       resetToken: token
     });
-  } catch {
+  } catch (er) {
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpires = undefined;
     await user.save({ validateBeforeSave: false });

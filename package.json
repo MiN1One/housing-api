@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "engines": {
+    "node": "14.18.0"
+  },
   "scripts": {
     "start": "set NODE_ENV=development&&nodemon server.js",
     "start:prod@windows": "set NODE_ENV=production&&nodemon server.js"
